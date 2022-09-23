@@ -1,0 +1,117 @@
+version: '3.7'
+
+# Volumes
+volumes:
+  redis:
+    driver: local
+  dbdata:
+    driver: local
+  pgdata:
+    driver: local
+
+# Networks
+networks:
+  backend:
+    driver: bridge
+
+services:
+  # Redis
+  # catalog-redis:
+  #   image: redis:alpine
+  #   container_name: catalog-redis
+  #   ports:
+  #     - "63791:6379"
+  #   environment:
+  #     - ALLOW_EMPTY_PASSWORD=yes
+  #   volumes:
+  #     - redis:/data
+  #   networks:
+  #     - backend
+
+  # Postgres
+  catalog-database:
+    image: postgres:alpine
+    container_name: catalog-database
+    ports:
+      - "54322:5432"
+    restart: always
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+#      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: catalog
+      POSTGRES_PASSWORD: sysadmin
+      POSTGRES_USER: postgres
+      PGDATA : /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # MySQL
+#  auth-database:
+#    image: mysql:5.8
+#    container_name: auth-database
+#    restart: unless-stopped
+#    tty: true
+#    ports:
+#      - "33061:3306"
+#    environment:
+#      - SERVICE_TAGS=dev
+#      - SERVICE_NAME=database
+#      - MYSQL_ROOT_PASSWORD=sysadmin
+#      - MYSQL_DATABASE=auth
+#      - MYSQL_USER=dev
+#      - MYSQL_PASSWORD=sysadmin
+#    volumes:
+#      - dbdata:/var/lib/mysql
+#      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+#    networks:
+#      - backend
+
+  # PHP
+  catalog-app:
+    build:
+      context: '.'
+      dockerfile: './docker/app/Dockerfile'
+    container_name: catalog-app
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "9000:9000"
+    depends_on:
+      - catalog-redis
+      - catalog-database
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/app/local.ini:/usr/local/etc/php/conf.d/local.ini
+    environment:
+      - SERVICE_TAGS=dev
+      - SERVICE_NAME=app
+      - DB_HOST=catalog-database
+      - DB_USERNAME=postgres
+# For my_sql
+#      - DB_USERNAME=root
+      - REDIS_HOST=catalog-redis
+    networks:
+      - backend
+
+  # Nginx
+  catalog-nginx:
+    image: nginx:alpine
+    container_name: catalog-nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d
+    depends_on:
+      - catalog-app
+    networks:
+      - backend
