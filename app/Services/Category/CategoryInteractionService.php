@@ -2,21 +2,20 @@
 
 namespace App\Services\Category;
 
+use App\Traits\AddSlugTrait;
 use Illuminate\Http\Request;
 use App\Models\Category;
-use Illuminate\Support\Str;
 
 final class CategoryInteractionService
 {
+    use AddSlugTrait;
     /**
      * @param Request $request
      * @return Category|null
      */
     public function store(Request $request): ?Category
     {
-        $request->merge([
-            'slug' => Str::slug($request->input('name')),
-        ]);
+        $request = $this->addSlug($request);
 
         $category = new Category;
         $category->fill($request->all());
@@ -32,9 +31,7 @@ final class CategoryInteractionService
      */
     public function update(Request $request, Category $category): ?Category
     {
-        $request->merge([
-            'slug' => Str::slug($request->input('name')),
-        ]);
+        $request = $this->addSlug($request);
 
         $category->fill($request->all())->save();
 

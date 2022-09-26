@@ -22,4 +22,12 @@ class Category extends Model
     {
         return $this->belongsToMany(Product::class);
     }
+
+    /**
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
 }

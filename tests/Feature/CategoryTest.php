@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 use Illuminate\Foundation\Testing\{RefreshDatabase, WithFaker};
 use Illuminate\Support\Facades\Artisan;
-use App\Models\{Category, Product};
+use Illuminate\Http\Response;
+use App\Models\Category;
 use Tests\TestCase;
 
 class CategoryTest extends TestCase
@@ -14,7 +13,6 @@ class CategoryTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     protected $count = 3;
-    protected $countChildren = 3;
 
     public function setUp(): void
     {
@@ -56,7 +54,7 @@ class CategoryTest extends TestCase
             'name' => $name,
         ]);
 
-        $response = $this->json("put", route('category.update', $category), $payload);
+        $response = $this->json("put", route('category.update', $category->slug), $payload);
         $response
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment([
@@ -68,7 +66,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create();
 
-        $response = $this->json("DELETE", route('category.delete', $category));
+        $response = $this->json("DELETE", route('category.delete', $category->slug));
         $response
             ->assertStatus(Response::HTTP_OK);
     }

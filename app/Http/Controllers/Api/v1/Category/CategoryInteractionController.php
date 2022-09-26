@@ -28,6 +28,7 @@ final class CategoryInteractionController extends Controller
 
     public function delete(Category $category): ?JsonResponse
     {
+        $category->products()->detach();
         $category->delete();
 
         return response()->json(['success' => true]);

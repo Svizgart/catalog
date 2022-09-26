@@ -23,4 +23,12 @@ class Product extends Model
     {
         return $this->belongsToMany(Category::class);
     }
+
+    /**
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
 }

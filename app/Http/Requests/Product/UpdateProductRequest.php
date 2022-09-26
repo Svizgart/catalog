@@ -13,7 +13,8 @@ class UpdateProductRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        //TODO:Заменить на false!
+        return true;
     }
 
     /**
@@ -24,7 +25,10 @@ class UpdateProductRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'name' => ['required', 'string', 'min:2', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1500'],
+            'price' => ['required', 'numeric', 'max:4294967295'],
+            'categories_slug.*' => ['required', 'string', 'min:2', 'max:255', 'exists:categories,slug'],
         ];
     }
 }
