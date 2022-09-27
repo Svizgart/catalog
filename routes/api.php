@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\v1\Category\{CategoryController, CategoryInteractionController};
 use App\Http\Controllers\Api\v1\Product\{ProductController, ProductInteractionController};
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,9 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//    return $request->user();
-//});
+Route::post('login', [AuthController::class, 'login']);
 
 Route::namespace('Api\\v1')
     ->prefix('v1')
@@ -25,21 +24,23 @@ Route::namespace('Api\\v1')
         Route::get('categories', [CategoryController:: class, 'index'])->name('category.index');
         Route::get('products/{category:slug}', [ProductController:: class, 'index'])->name('product.index');
 
-        Route::post('product/store', [ProductInteractionController::class, 'store'])
-            ->middleware('format.price')
-            ->name('product.store');
-        Route::put('product/{product:slug}/update', [ProductInteractionController::class, 'update'])
-            ->middleware('format.price')
-            ->name('product.update');
-        Route::delete('product/{product:slug}/delete', [ProductInteractionController::class, 'delete'])
-            ->name('product.delete');
+        Route::middleware('auth:sanctum')->group(function (){
+            Route::post('product/store', [ProductInteractionController::class, 'store'])
+                ->middleware('format.price')
+                ->name('product.store');
+            Route::put('product/{product:slug}/update', [ProductInteractionController::class, 'update'])
+                ->middleware('format.price')
+                ->name('product.update');
+            Route::delete('product/{product:slug}/delete', [ProductInteractionController::class, 'delete'])
+                ->name('product.delete');
 
-        Route::post('category/store', [CategoryInteractionController::class, 'store'])
-            ->name('category.store');
-        Route::put('category/{category:slug}update', [CategoryInteractionController::class, 'update'])
-            ->name('category.update');
-        Route::delete('category/{category:slug}/delete', [CategoryInteractionController::class, 'delete'])
-            ->name('category.delete');
+            Route::post('category/store', [CategoryInteractionController::class, 'store'])
+                ->name('category.store');
+            Route::put('category/{category:slug}update', [CategoryInteractionController::class, 'update'])
+                ->name('category.update');
+            Route::delete('category/{category:slug}/delete', [CategoryInteractionController::class, 'delete'])
+                ->name('category.delete');
+        });
     });
 
 

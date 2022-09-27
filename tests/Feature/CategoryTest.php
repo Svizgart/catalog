@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\{RefreshDatabase, WithFaker};
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Response;
 use App\Models\Category;
@@ -13,6 +16,25 @@ class CategoryTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     protected $count = 3;
+
+    /*public function withoutMiddleware($middleware = null)
+    {
+        if (is_null($middleware)) {
+            $this->app->instance('middleware.disable', true);
+
+            return $this;
+        }
+
+        foreach ((array) $middleware as $abstract) {
+            $this->app->instance($abstract, new class {
+                public function handle($request, $next) {
+                    return $next($request);
+                }
+            });
+        }
+
+        return $this;
+    }*/
 
     public function setUp(): void
     {
@@ -36,6 +58,8 @@ class CategoryTest extends TestCase
 
     public function testCategoryStore()
     {
+        $this->createAuthUser();
+
         $payload = Category::factory()->raw();
 
         $response = $this->json("POST", route('category.store'), $payload);
@@ -47,6 +71,7 @@ class CategoryTest extends TestCase
 
     public function testCategoryUpdate()
     {
+        $this->createAuthUser();
         $category = Category::factory()->create();
 
         $name = $this->faker->realText(20);
@@ -64,11 +89,20 @@ class CategoryTest extends TestCase
 
     public function testCategoryDelete()
     {
+        $this->createAuthUser();
         $category = Category::factory()->create();
 
         $response = $this->json("DELETE", route('category.delete', $category->slug));
         $response
             ->assertStatus(Response::HTTP_OK);
+    }
+
+    private function createAuthUser()
+    {
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
     }
 
 }

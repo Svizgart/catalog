@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Http\Response;
+use App\Models\{Category, Product, User};
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\Response;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -46,6 +46,7 @@ class ProductTest extends TestCase
 
     public function testProductStore()
     {
+        $this->createAuthUser();
         Category::factory()->count($this->count)->create();
 
         $payload = Product::factory()->raw();
@@ -67,6 +68,7 @@ class ProductTest extends TestCase
 
     public function testProductUpdate()
     {
+        $this->createAuthUser();
         Category::factory()->count($this->count)->create()->each(function ($category) {
             $category->products()->createMany(
                 Product::factory()->count($this->countChildren)->raw()
@@ -99,6 +101,7 @@ class ProductTest extends TestCase
 
     public function testProductDelete()
     {
+        $this->createAuthUser();
         Category::factory()->count($this->count)->create()->each(function ($category) {
             $category->products()->createMany(
                 Product::factory()->count($this->countChildren)->raw()
@@ -110,5 +113,13 @@ class ProductTest extends TestCase
         $response = $this->json("DELETE", route('product.delete', $product));
         $response
             ->assertStatus(Response::HTTP_OK);
+    }
+
+    private function createAuthUser()
+    {
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
     }
 }
